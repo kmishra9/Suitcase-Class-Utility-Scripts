@@ -7,12 +7,14 @@ example: python3 homeworkChecker.py SampleRoster.csv SampleHomeworkResponses.csv
 
 Outputs the name of each student who missed a homework, sorted by their UGSI and the number of homework assignments missed. In addition, creates a file named (students_without_submissions) that *only* contains their emails for easy copy/paste into an email reminder and or notification.
 
-Dependencies: use python3 -m pip install [package]
+Dependencies: use python3 -m pip install [package1] [package2] [...]
     numpy
     datascience
     matplotlib
     pandas
     scipy
+
+Example: python3 -m pip install numpy datascience matplotlib pandas scipy
 """
 
 import sys
@@ -68,7 +70,7 @@ output = missed_homeworks_tbl.join("Email",roster_table).select("Name", "Email",
 
 output = output.sort("Num missing", descending=True).sort("UGSI")
 
-print(output)
+print(output.as_text())
 
 #Outputting emails into a file
 file = open("students_without_submissions.txt", 'w')
