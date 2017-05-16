@@ -158,7 +158,16 @@ output = output.sort("Num missing", descending=True).sort("UGSI")
 print(output.as_text())
 
 #Outputting emails into a file
-file = open("students_without_submissions.txt", 'w')
+
+path = "students_without_submissions.txt"
+if len(homework_response_paths) == 1:
+    hw_number = [int(s) for s in homework_response_paths[0][::-1] if s.isdigit()]
+    if len(hw_number) > 0:
+        path = path[:-4] + "HW" + str(hw_number[0]) + ".txt"
+
+    
+
+file = open(path, 'w')
 emails = output.column("Email")
 
 file.write( emails[0] )
