@@ -1,11 +1,13 @@
 """
-Python Script designed to output names of all students who did not complete the homework
+Python Script designed to output names of all students who submitted an application by did not attend clinic tours 
 
-usage: python3 homeworkChecker.py [roster filename] [homework 1 responses filename] [...]
+usage: python3 clinicTourChecker.py [application submissions filename] [clinic tour attendees filename]
 
-example: python3 homeworkChecker.py SampleRoster.csv SampleHomeworkResponses.csv SampleHomeworkResponses2.csv
+example: python3 clinicTourChecker.py SampleSubmissions.csv 
 
-Outputs the name of each student who missed a homework, sorted by their UGSI and the number of homework assignments missed. In addition, creates a file named (students_without_submissions) that *only* contains their emails for easy copy/paste into an email reminder and or notification.
+Outputs the name of each student who submitted an application *but did not attend clinic tours*
+
+*************This is a port over from the homeworkChecker so variable names may be kinda weird 
 
 Dependencies: use python3 -m pip install [package1] [package2] [...]
     numpy
@@ -109,8 +111,8 @@ def find_fuzzy_matches(all_emails, submission_emails):
     return missing_submissions
 
 #Ensuring that enough file paths have been passed into the script
-improper_arg_msg = "Usage: 'python3 homeworkChecker.py [roster filename] [homework 1 responses filename] [...]'"
-assert len(sys.argv) >= 3, improper_arg_msg
+improper_arg_msg = "Usage: 'python3 clinicTourChecker.py [application submissions filename] [clinic tour attendees filename]'"
+assert len(sys.argv) == 3, improper_arg_msg
 
 #Getting the roster and homework response paths
 roster_path = sys.argv[1]
@@ -151,9 +153,7 @@ missed_homeworks_tbl = Table().with_columns(
 )
 
 #Get all students who missed homework and sort them by their UGSI, and the number of homeworks they've missed
-output = missed_homeworks_tbl.join("Email",roster_table).select("Name", "Email", "UGSI", "Num missing")
-
-output = output.sort("Num missing", descending=True).sort("UGSI")
+output = missed_homeworks_tbl.join("Email",roster_table).select("Name", "Email")
 
 print(output.as_text())
 
