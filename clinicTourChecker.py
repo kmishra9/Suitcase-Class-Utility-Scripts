@@ -1,13 +1,9 @@
 """
 Python Script designed to output names of all students who submitted an application by did not attend clinic tours 
 
-usage: python3 clinicTourChecker.py [application submissions filename] [clinic tour attendees filename]
-
-example: python3 clinicTourChecker.py SampleSubmissions.csv 
+usage: python3 clinicTourChecker.py
 
 Outputs the name of each student who submitted an application *but did not attend clinic tours*
-
-*************This is a port over from the homeworkChecker so variable names may be kinda weird 
 
 Dependencies: use python3 -m pip install [package1] [package2] [...]
     numpy
@@ -18,14 +14,34 @@ Dependencies: use python3 -m pip install [package1] [package2] [...]
     fuzzywuzzy
 
 Example: python3 -m pip install numpy datascience matplotlib pandas scipy fuzzywuzzy
+
+Example of Application Submissions File: https://docs.google.com/spreadsheets/d/1dfNlANsLDBeqmFl-hD4bBg_gYhxK3KzBEf-ZEP5ENS0/edit?usp=sharing
+Example of Clinic Tour Attendees File: https://docs.google.com/spreadsheets/d/1RZRdkwvCBKodHu1bFmEE1K9G1NBMdOdDyh0rlWQm2-o/edit?usp=sharing
 """
 
 import sys
 import numpy as np
-from datascience import *
+import pandas as pd 
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 
+def load_data_into_frame(url):
+    #Doing some URL reformatting
+    separated       = url.split(sep='/')
+    gid             = separated[-1].split(sep='gid=')[-1]
+    separated[-1]    = 'export?gid=' + gid + '&format=csv'
+    reconstructed_url = '/'.join(separated)
+    
+    df = pd.read_csv(reconstructed_url)
+    
+    assert df is not None, "Data did not load!"
+
+    if "Email Address" in df.columns:                               df["Email"] = df["Email Address"]
+    if "First Name" in df.columns and "Last Name" in df.columns:    df["Name"]  = np.core.defchararray.add(df["First Name"].values.astype(str), df["Last Name"].values.astype(str))
+    
+    assert "Email" in df.columns and "Name" in df.columns, "The input file given did not have the correct structure -- it needs (at least) an 'Email' and 'Name' column but these were the columns given: " + str(df.columns.values.tolist())
+    print(".\n..\n...\nSuccess -- loading complete!\n")
+    return df
 
 def find_fuzzy_matches(all_emails, submission_emails):
     """Given an array of all emails and an array of submission emails, uses fuzzy string matching to find all emails that did not submit
@@ -110,72 +126,47 @@ def find_fuzzy_matches(all_emails, submission_emails):
     
     return missing_submissions
 
-#Ensuring that enough file paths have been passed into the script
-improper_arg_msg = "Usage: 'python3 clinicTourChecker.py [application submissions filename] [clinic tour attendees filename]'"
-assert len(sys.argv) == 3, improper_arg_msg
+try:
+    print("")
+    application_submissions_url = input("Please input the URL of the Google Sheet with Application Submissions:\n")
+    application_submissions     = load_data_into_frame(application_submissions_url)
+    
+    clinic_tour_attendances_url = input("Please input the URL of the Google Sheet with Clinic Tour Attendees:\n")
+    clinic_tour_attendances     = load_data_into_frame(clinic_tour_attendances_url)
 
-#Getting the roster and homework response paths
-roster_path = sys.argv[1]
-homework_response_paths = []
+except:
+    error_msg  = "Uh oh... Something went wrong while trying to load the data in from the URL you provided.\n"
+    error_msg += "Make sure:\n\t1) the URL is from the **URL BAR** at the top of your browser \n\t2) you have clicked 'Share' and 'Get Shareable Link' in the top right of the sheet -- the sheet needs to not be locked down and private for us to access it here\n"
+    print(error_msg)
+    quit()
 
-for homework_response_path in sys.argv[2:]:
-    homework_response_paths.append( homework_response_path )
 
-#Putting them into tables
-roster_table = Table.read_table(roster_path)
-homework_tables = []
+#Getting students who submitted an application but didn't attend clinic tours
+all_student_emails          = set( application_submissions['Email'] )
+submitted_student_emails    = set( clinic_tour_attendances['Email'] )
+students_without_submissions= find_fuzzy_matches(all_student_emails, submitted_student_emails)
 
-for homework_response_path in homework_response_paths:
-    homework_tables.append( Table.read_table(homework_response_path).select("Email") )
+#Creating a table of students without submissions
+output = application_submissions[ application_submissions['Email'].isin(students_without_submissions) ]
 
-#Getting students who are in class but didn't submit
-all_student_emails = set( roster_table.column("Email") )
-students_without_submissions = []
 
-for homework_table in homework_tables:
-    submitted_student_emails = set( homework_table.column("Email") )
-    students_without_submissions.append( find_fuzzy_matches(all_student_emails, submitted_student_emails) )
-
-#Figuring out the number of times each student missed a homework
-missed_homeworks = dict()       #Maps from student's email -> # of missed homeworks
-
-for student_set in students_without_submissions:
-    for student in student_set:
-
-        if student not in missed_homeworks:
-            missed_homeworks[student] = 0
-        missed_homeworks[student] += 1
-
-#Creating a table with the missed_homeworks information
-missed_homeworks_tbl = Table().with_columns(
-    "Email",            [student                   for student in missed_homeworks],
-    "Num missing",      [missed_homeworks[student] for student in missed_homeworks]
-)
-
-#Get all students who missed homework and sort them by their UGSI, and the number of homeworks they've missed
-output = missed_homeworks_tbl.join("Email",roster_table).select("Name", "Email")
-
-print(output.as_text())
+print(output[["Name", "Email"]].head(len(students_without_submissions)))
 
 #Outputting emails into a file
 path = "students_without_submissions.txt"
-if len(homework_response_paths) == 1:
-    hw_number = [int(s) for s in homework_response_paths[0][::-1] if s.isdigit()]
-    if len(hw_number) > 0:
-        path = path[:-4] + "HW" + str(hw_number[0]) + ".txt"
 
-    
+output.to_csv( path, columns=["Email"], index=False )
 
-file = open(path, 'w')
-emails = output.column("Email")
+# file = open(path, 'w')
+# emails = output.column("Email")
 
-file.write( emails[0] )
+# file.write( emails[0] )
 
-for email in emails[1:]:
-    file.write( ", " )
-    file.write( email )
+# for email in emails[1:]:
+#     file.write( ", " )
+#     file.write( email )
 
-file.close()
+# file.close()
 
 if __name__ == "__main__":
     import doctest
