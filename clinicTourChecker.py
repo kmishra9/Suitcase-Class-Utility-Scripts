@@ -12,11 +12,12 @@ Dependencies: use python3 -m pip install [package1] [package2] [...]
     pandas
     scipy
     fuzzywuzzy
+    termcolor
 
 Example: python3 -m pip install numpy datascience matplotlib pandas scipy fuzzywuzzy
 
-Example of Application Submissions File: https://docs.google.com/spreadsheets/d/1dfNlANsLDBeqmFl-hD4bBg_gYhxK3KzBEf-ZEP5ENS0/edit?usp=sharing
-Example of Clinic Tour Attendees File: https://docs.google.com/spreadsheets/d/1RZRdkwvCBKodHu1bFmEE1K9G1NBMdOdDyh0rlWQm2-o/edit?usp=sharing
+Example of Application Submissions File:    https://docs.google.com/spreadsheets/d/1dfNlANsLDBeqmFl-hD4bBg_gYhxK3KzBEf-ZEP5ENS0/edit?usp=sharing
+Example of Clinic Tour Attendees File:      https://docs.google.com/spreadsheets/d/1RZRdkwvCBKodHu1bFmEE1K9G1NBMdOdDyh0rlWQm2-o/edit?usp=sharing
 """
 
 import sys
@@ -24,6 +25,7 @@ import numpy as np
 import pandas as pd 
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
+from termcolor import *
 
 def load_data_into_frame(url):
     #Doing some URL reformatting
@@ -40,7 +42,7 @@ def load_data_into_frame(url):
     if "First Name" in df.columns and "Last Name" in df.columns:    df["Name"]  = np.core.defchararray.add(df["First Name"].values.astype(str), df["Last Name"].values.astype(str))
     
     assert "Email" in df.columns and "Name" in df.columns, "The input file given did not have the correct structure -- it needs (at least) an 'Email' and 'Name' column but these were the columns given: " + str(df.columns.values.tolist())
-    print(".\n..\n...\nSuccess -- loading complete!\n")
+    cprint(".\n..\n...\nSuccess -- loading complete!\n", 'green')
     return df
 
 def find_fuzzy_matches(all_emails, submission_emails):
@@ -79,10 +81,11 @@ def find_fuzzy_matches(all_emails, submission_emails):
     **********
     ['kmishra9@berkeley.edu']
     """
+    submission_emails = [student_email.split('@')[0] for student_email in submission_emails]
     
     num_students, num_submissions = len(all_emails), len(submission_emails)
     
-    matches = [ process.extract(query=student_email, choices=submission_emails) + [(student_email, -1)] for student_email in all_emails ] 
+    matches = [ process.extract(query=student_email.split('@')[0], choices=submission_emails) + [(student_email, -1)] for student_email in all_emails ] 
     
     #Removes all perfect matches -- need to take the top X matches, where X = submissions - perfect matches
     get_top_similarity_score = lambda processed_query: processed_query[0][1]
@@ -104,39 +107,41 @@ def find_fuzzy_matches(all_emails, submission_emails):
         flagged = []
         for missing_submission in missing_submissions:
             if (get_top_similarity_score(missing_submission) < 80 or get_most_similar_email(missing_submission)[0] != get_email(missing_submission)[0]) and count < num_false_negatives:
-                print("**********" + "\nPlease check on " + get_email(missing_submission) + ". The most similar email we found in the submissions was " +
-                get_most_similar_email(missing_submission) + " with a similarity score of " + str(get_top_similarity_score(missing_submission)) + " out of 100.", "\n**********" )
+                cprint("**********", 'blue')
+                cprint("Please check on " + get_email(missing_submission) + ". The most similar email we found was suspicious", 'red' )
+                cprint("**********", 'blue')
+                print("")
                 
                 flagged.append(missing_submission)
                 
             count += 1
-        
+            
         #Getting rid of false negatives (people who were the closest fuzzy matches)
         missing_submissions = missing_submissions[num_false_negatives:] + flagged
-        
+
     #Logical error or issue with input files    
     elif num_missing_submissions + num_submissions < num_students:
         error_msg =  "Something went wrong -- most likely, your roster is incomplete or a student submitted twice, please correct the input files\n\n"
         error_msg += "Here are the students with 'missing' submissions' " + str(missing_submissions) 
         assert False, error_msg
     
-        
-    
     missing_submissions = [get_email(processed_query) for processed_query in missing_submissions]
     
     return missing_submissions
 
 try:
-    print("")
-    application_submissions_url = input("Please input the URL of the Google Sheet with Application Submissions:\n")
+    os.system('clear')
+    application_submissions_url = input("Please input the URL of the Google Sheet with " + colored('Application Submissions', 'green') + ":\n")
     application_submissions     = load_data_into_frame(application_submissions_url)
     
-    clinic_tour_attendances_url = input("Please input the URL of the Google Sheet with Clinic Tour Attendees:\n")
+    clinic_tour_attendances_url = input("Please input the URL of the Google Sheet with " + colored('Clinic Tour Attendees', 'green') + ":\n")
     clinic_tour_attendances     = load_data_into_frame(clinic_tour_attendances_url)
 
 except:
-    error_msg  = "Uh oh... Something went wrong while trying to load the data in from the URL you provided.\n"
-    error_msg += "Make sure:\n\t1) the URL is from the **URL BAR** at the top of your browser \n\t2) you have clicked 'Share' and 'Get Shareable Link' in the top right of the sheet -- the sheet needs to not be locked down and private for us to access it here\n"
+    os.system('clear')
+    error_msg  = colored('Something went wrong while trying to load the data', 'red') + ' in from the URL!\n\n'
+    error_msg += "Make sure:\n\t1) the URL is from the " + colored("URL BAR", 'red') + " (for the sheet)"
+    error_msg += "\n\t2) you have clicked " + colored('Share', 'red') + " and " + colored('Get Shareable Link', 'red') + " (for the sheet)\n"
     print(error_msg)
     quit()
 
@@ -149,25 +154,16 @@ students_without_submissions= find_fuzzy_matches(all_student_emails, submitted_s
 #Creating a table of students without submissions
 output = application_submissions[ application_submissions['Email'].isin(students_without_submissions) ]
 
+cprint("========================================================================", 'blue')
+print(output[["Name", "Email"]].head(len(output)))
+cprint("========================================================================", 'blue')
 
-print(output[["Name", "Email"]].head(len(students_without_submissions)))
 
 #Outputting emails into a file
 path = "students_without_submissions.txt"
-
-output.to_csv( path, columns=["Email"], index=False )
-
-# file = open(path, 'w')
-# emails = output.column("Email")
-
-# file.write( emails[0] )
-
-# for email in emails[1:]:
-#     file.write( ", " )
-#     file.write( email )
-
-# file.close()
+output.to_csv( path, columns=["Email"], index=False, header=False )
 
 if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
+    #import doctest
+    #doctest.testmod()
+    ""
