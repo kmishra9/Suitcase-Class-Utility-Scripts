@@ -1,19 +1,16 @@
 """
 Python Script designed to notify all students who did not complete the homework
 
-usage: python3 notifyByEmail.py [students_without_submissions filename]
+usage: python3 notifyByEmail.py
 
-example: python3 notifyByEmail.py students_without_submissions.txt
+example: python3 notifyByEmail.py
 
-Given a file containing a set of emails for students who are missing submissions, emails them a generic message letting them know we didn't receive the homework and that they need to complete the HW ASAP.
+Given a directory containing a students_without_submissions.txt that has a set of emails for students who are missing submissions, 
+emails them a generic message letting them know we didn't receive the homework and that they need to complete the HW ASAP.
 
-Dependencies: use python3 -m pip install [package1] [package2] [...]
-    TBD
+Dependencies: None! 
 
-Example: python3 -m pip install TBD
-
-
-Resources
+Resources & Inspiration
     http://naelshiab.com/tutorial-send-email-python/
     https://docs.python.org/3/library/email-examples.html
 """
@@ -21,16 +18,28 @@ Resources
 import smtplib
 from email.mime.text import MIMEText
 import termcolor
+import os
 
 def get_recipients():
-    return ['kunalmishra9@gmail.com', 'kmishra9@berkeley.edu']
-
+    path = 'students_without_submissions.txt'
+    assert os.path.isfile(path), "Uh-oh... it looks like you don't have a file titled '" +path+ "'. Please make sure you run homeworkChecker.py first before using the Automated Email Reminder system."
+    
+    recipients_file = open(path, 'r')
+    return recipients_file.readlines()
 
 server = smtplib.SMTP('smtp.gmail.com:587')
 server.ehlo()
 server.starttls()
 user_email, user_pass = 'suitcaseclass@gmail.com', 'sweetcaseclass!'
-server.login(user_email, user_pass)                                             #Fixes any login issues: https://accounts.google.com/DisplayUnlockCaptcha
+try:
+    server.login(user_email, user_pass)                                             #Fixes any login issues: https://accounts.google.com/DisplayUnlockCaptcha
+except:
+    os.system('clear')
+    print("Error - was unable to log in due to login permissions or invalid user credentials. Please ensure the following are correct:")
+    print("Email:", user_email)
+    print("Pswd:", user_pass)
+    print("If credentials are valid, please visit the following URL: https://accounts.google.com/DisplayUnlockCaptcha")
+    quit()
 
 homework_number    = input("What homework number are you emailing about?\n").strip()
 assert 0 <= int(homework_number) <= 16, 'Invalid homework number inputted -- should be an integer between 0 and 16. Quitting...'

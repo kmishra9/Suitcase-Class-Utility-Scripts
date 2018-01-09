@@ -18,6 +18,9 @@ Example: python3 -m pip install numpy datascience matplotlib pandas scipy fuzzyw
 
 Example of Application Submissions File:    https://docs.google.com/spreadsheets/d/1dfNlANsLDBeqmFl-hD4bBg_gYhxK3KzBEf-ZEP5ENS0/edit?usp=sharing
 Example of Clinic Tour Attendees File:      https://docs.google.com/spreadsheets/d/1RZRdkwvCBKodHu1bFmEE1K9G1NBMdOdDyh0rlWQm2-o/edit?usp=sharing
+
+Sample URL to use for Prompt 1:             https://docs.google.com/spreadsheets/d/1dfNlANsLDBeqmFl-hD4bBg_gYhxK3KzBEf-ZEP5ENS0/edit#gid=1958005464
+Sample URL to use for Prompt 2:             https://docs.google.com/spreadsheets/d/1RZRdkwvCBKodHu1bFmEE1K9G1NBMdOdDyh0rlWQm2-o/edit#gid=0
 """
 
 import sys
@@ -138,7 +141,6 @@ try:
     clinic_tour_attendances     = load_data_into_frame(clinic_tour_attendances_url)
 
 except:
-    os.system('clear')
     error_msg  = colored('Something went wrong while trying to load the data', 'red') + ' in from the URL!\n\n'
     error_msg += "Make sure:\n\t1) the URL is from the " + colored("URL BAR", 'red') + " (for the sheet)"
     error_msg += "\n\t2) you have clicked " + colored('Share', 'red') + " and " + colored('Get Shareable Link', 'red') + " (for the sheet)\n"
@@ -162,8 +164,3 @@ cprint("========================================================================
 #Outputting emails into a file
 path = "students_without_submissions.txt"
 output.to_csv( path, columns=["Email"], index=False, header=False )
-
-if __name__ == "__main__":
-    #import doctest
-    #doctest.testmod()
-    ""
