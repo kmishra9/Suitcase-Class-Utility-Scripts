@@ -84,6 +84,10 @@ def find_fuzzy_matches(all_emails, submission_emails):
     **********
     ['kmishra9@berkeley.edu']
     """
+    # Sanitizing input email lists
+    submission_emails = [email for email in submission_emails if type(email) == str]
+    all_emails = [email for email in all_emails if type(email) == str]
+    
     submission_emails = [student_email.split('@')[0] for student_email in submission_emails]
     
     num_students, num_submissions = len(all_emails), len(submission_emails)

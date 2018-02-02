@@ -43,7 +43,8 @@ def load_data_into_frame(url):
 
     if "Email Address" in df.columns:                               df["Email"] = df["Email Address"]
     if "First Name" in df.columns and "Last Name" in df.columns:    df["Name"]  = np.core.defchararray.add(df["First Name"].values.astype(str), df["Last Name"].values.astype(str))
-    
+    elif "First name" in df.columns and "Last name" in df.columns:    df["Name"]  = np.core.defchararray.add(df["First name"].values.astype(str), df["Last name"].values.astype(str))
+
     assert "Email" in df.columns and "Name" in df.columns, "The input file given did not have the correct structure -- it needs (at least) an 'Email' and 'Name' column but these were the columns given: " + str(df.columns.values.tolist())
     cprint(".\n..\n...\nSuccess -- loading complete!\n", 'green')
     return df
@@ -84,6 +85,10 @@ def find_fuzzy_matches(all_emails, submission_emails):
     **********
     ['kmishra9@berkeley.edu']
     """
+    # Sanitizing input email lists
+    submission_emails = [email for email in submission_emails if type(email) == str]
+    all_emails = [email for email in all_emails if type(email) == str]
+    
     submission_emails = [student_email.split('@')[0] for student_email in submission_emails]
     
     num_students, num_submissions = len(all_emails), len(submission_emails)
@@ -145,11 +150,15 @@ except:
     error_msg += "Make sure:\n\t1) the URL is from the " + colored("URL BAR", 'red') + " (for the sheet)"
     error_msg += "\n\t2) you have clicked " + colored('Share', 'red') + " and " + colored('Get Shareable Link', 'red') + " (for the sheet)\n"
     print(error_msg)
+    
     quit()
 
 
 #Getting students who submitted an application but didn't attend clinic tours
 all_student_emails          = set( application_submissions['Email'] )
+
+print(application_submissions['Email'])
+
 submitted_student_emails    = set( clinic_tour_attendances['Email'] )
 students_without_submissions= find_fuzzy_matches(all_student_emails, submitted_student_emails)
 

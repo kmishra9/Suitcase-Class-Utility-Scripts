@@ -34,8 +34,7 @@ user_email, user_pass = 'suitcaseclass@gmail.com', 'sweetcaseclass!'
 try:
     server.login(user_email, user_pass)                                             #Fixes any login issues: https://accounts.google.com/DisplayUnlockCaptcha
 except:
-    os.system('clear')
-    print("Error - was unable to log in due to login permissions or invalid user credentials. Please ensure the following are correct:")
+    print("\nError - was unable to log in due to login permissions or invalid user credentials. Please ensure the following are correct:")
     print("Email:", user_email)
     print("Pswd:", user_pass)
     print("If credentials are valid, please visit the following URL: https://accounts.google.com/DisplayUnlockCaptcha")
