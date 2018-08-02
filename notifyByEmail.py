@@ -30,7 +30,7 @@ def get_recipients():
 server = smtplib.SMTP('smtp.gmail.com:587')
 server.ehlo()
 server.starttls()
-user_email, user_pass = 'suitcaseclass@gmail.com', 'sweetcaseclass!'
+user_email, user_pass = 'suitcaseclass' + '@' 'gmai' + 'l.com', 'sweetcase' + 'class!'
 try:
     server.login(user_email, user_pass)                                             #Fixes any login issues: https://accounts.google.com/DisplayUnlockCaptcha
 except:
