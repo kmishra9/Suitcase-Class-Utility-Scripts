@@ -14,7 +14,7 @@ Dependencies: use python3 -m pip install [package1] [package2] [...]
     fuzzywuzzy
     termcolor
 
-Example: python3 -m pip install numpy datascience matplotlib pandas scipy fuzzywuzzy
+Example: python3 -m pip install numpy datascience matplotlib pandas scipy fuzzywuzzy termcolor
 
 Example of Application Submissions File:    https://docs.google.com/spreadsheets/d/1dfNlANsLDBeqmFl-hD4bBg_gYhxK3KzBEf-ZEP5ENS0/edit?usp=sharing
 Example of Clinic Tour Attendees File:      https://docs.google.com/spreadsheets/d/1RZRdkwvCBKodHu1bFmEE1K9G1NBMdOdDyh0rlWQm2-o/edit?usp=sharing
